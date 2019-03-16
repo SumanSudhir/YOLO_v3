@@ -64,3 +64,75 @@ def create_modules(blocks):
         #check the type of the blocks
         #Create the new module for the blocks
         #append to the module_list
+
+        if(x["type"] == "convolutional"):
+            #Get info about the layers
+            activation = x["activation"]
+            try:
+                batch_normalize = int(x["batch_normalize"])         #whenever there is no batch_normalization except will execute
+                bias = False
+            except:
+                batch_normalize = 0
+                bias = True
+
+            filters = int(x["filters"])
+            padding = int(x["pad"])
+            kernal_size = int(x["size"])
+            stride = int(x["stride"])
+
+            if padding:
+                pad = (kernal_size-1)//2
+            else:
+                pad = 0
+
+            #Add the convolutional layer
+            conv = nn.Conv2d(prev_filter, filters, kernal_size, stride, pad)
+            module.add_module("conv_{0}".format(index), conv)
+
+            #Add the Batch Norm Layer
+            if batch_normalize:
+                bn = nn.BatchNorm2d(filters)
+                module.add_module("batch_norm_{0}".format(index), bn)
+
+            #Check the activation
+            #It is either Linear or a Leaky ReLU for YOLO
+            if activation == "leaky":
+                activn = nn.LeakyReLU(0.1, inplace = True)
+                module.add_module("batch_norm_{0}".format(index), activn)
+
+
+        #If it is upsampling the layers
+        #We use Binear2dUpsampling
+        elif(x["type"] == "upsample"):
+            stride = int(x["stride"])
+            upsample = nn.Upsample(scale_factor = 2, mode = "bilinear")
+            module.add_module("upsample_{}".format(index), upsample)
+
+        #if it is a route layer
+        elif(x["type"] == "route"):
+            x["layers"] = x["layers"].split(",")
+            #Start of route
+            start = int(x["layers"][0])
+            #end, if there exists one
+            try:
+                end = int(x["layers"][1])
+            except:
+                end = 0
+            #Positive annotation
+            if start > 0:
+                start = start - index
+            if end > 0:
+                end = end - index
+            route = Emptylayer()
+            module.add_module("route_{0}".format(index),route)
+            if end < 0:
+                filters = output_filters[index + start] + output_filters[index + end]
+            else:
+                filters = output_filters[index + start]
+
+        #shortcut corresponding to skip connection
+        elif x["type"] == "shortcut":
+            shortcut = Emptylayer()
+            module.add_module("shortcut_{}".format(index), shortcut)
+
+    return 0
