@@ -52,6 +52,17 @@ print(x[0])
 
 """
 
+class Emptylayer(nn.Module):
+    def __init__(self):
+        super(Emptylayer, self).__init__()
+
+class DetectionLayer(nn.Module):
+    def __init__(self, anchors):
+        super(DetectionLayer, self).__init__()
+        self.anchors = anchors
+
+
+
 #Creating the building blocks
 def create_modules(blocks):
     net_info = blocks[0]                                #Captures the information about the input and pre-processing
@@ -135,4 +146,26 @@ def create_modules(blocks):
             shortcut = Emptylayer()
             module.add_module("shortcut_{}".format(index), shortcut)
 
-    return 0
+        #Yolo layers
+        #Yolo is the detection layer
+        elif x["type"] == "yolo":
+            mask = x["mask"].split(",")
+            mask = [int(x) for x in mask]
+
+            anchors = x["anchors"].split(",")
+            anchors = [int(a) for a in anchors]
+            anchors = [(anchors[i], anchors[i+1]) for i in range(0, len(anchors), 2)]     #i = 0,2,4,6......(
+            anchors = [anchors[i] for i in mask]
+
+            detection = DetectionLayer(anchors)
+            module.add_module("Detection_{}".format(index),detection)
+
+        module_list.append(module)
+        prev_filter = filters
+        output_filters.append(filters)
+
+    return (net_info, module_list)
+
+#Testing the code
+blocks = parse_cfg("cfg/yolov3.cfg")
+print(create_modules(blocks))
