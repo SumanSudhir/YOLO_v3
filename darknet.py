@@ -47,8 +47,7 @@ def parse_cfg(cfgfile):
 Testing of above functional
 
 t = "/home/sudhir/Desktop/YOLO_v3/cfg/yolov3.cfg"
-x  = parse_cfg(t)
-print(x[0])
+x  = parse_cfg(t)t(x[0])
 
 """
 
@@ -186,7 +185,7 @@ def forward(self, x, CUDA):
     outputs = {}                         #We cache the output of the route layer
 
     write = 0
-    for i, module = in enumerate(modules):
+    for i, module in enumerate(modules):
         module_type = (module["type"])
 
         #for conv and upsample layers
@@ -218,20 +217,4 @@ def forward(self, x, CUDA):
             from_ = int(module["from"])
             x = outputs[i-1] + outputs[i + from_]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return 0
+    #return x
